@@ -1,0 +1,17 @@
+# Binaries
+main
+demo-backend
+*.exe
+
+# Env & secrets
+.env
+.env.local
+*.env
+
+# Build artifacts
+node_modules/
+dist/
+build/
+
+# Logs
+*.log

@@ -1,0 +1,16 @@
+{
+  "name": "kotacloud-demo-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "KotaCloud Spaces demo frontend - multi-page Node app untuk mengetes platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "echo 'no build step needed'",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {}
+}

@@ -38,7 +38,9 @@ function proxyApi(req, res) {
     return;
   }
   const target = API_URL + req.url.replace(/^\/api/, "/api");
-  const proxyReq = http.request(target, { method: req.method, headers: { "content-type": req.headers["content-type"] || "application/json" } }, (apiRes) => {
+  const transport = target.startsWith("https:") ? require("https") : http;
+  // bypass CSP-style pitfalls: url tanpa protokol dianggap http (kasus host:port internal)
+  const proxyReq = transport.request(target, { method: req.method, headers: { "content-type": req.headers["content-type"] || "application/json" }, rejectUnauthorized: false }, (apiRes) => {
     res.writeHead(apiRes.statusCode || 502, {
       "content-type": apiRes.headers["content-type"] || "application/json",
     });
@@ -160,7 +162,8 @@ const server = http.createServer(async (req, res) => {
       renderProductsPage(res, { flash: `Membuat note "${form.get("title")}"…`, noteTitle: form.get("title") || "", noteBody: form.get("body") || "", doCreate: true });
       // kirim create ke backend secara fire-and-forget
       if (API_URL && form.get("title")) {
-        const apiReq = http.request(API_URL + "/api/notes", { method: "POST", headers: { "content-type": "application/json" } }, () => {});
+        const createTransport = API_URL.startsWith("https:") ? require("https") : http;
+        const apiReq = createTransport.request(API_URL + "/api/notes", { method: "POST", headers: { "content-type": "application/json" }, rejectUnauthorized: false }, () => {});
         apiReq.on("error", () => {});
         apiReq.end(JSON.stringify({ title: form.get("title"), body: form.get("body") || "" }));
       }
@@ -174,7 +177,8 @@ const server = http.createServer(async (req, res) => {
       const form = new URLSearchParams(body);
       const id = form.get("id");
       if (API_URL && id) {
-        const apiReq = http.request(API_URL + `/api/notes/${id}`, { method: "DELETE" }, () => {});
+        const deleteTransport = API_URL.startsWith("https:") ? require("https") : http;
+        const apiReq = deleteTransport.request(API_URL + `/api/notes/${id}`, { method: "DELETE", rejectUnauthorized: false }, () => {});
         apiReq.on("error", () => {});
         apiReq.end();
       }
@@ -214,7 +218,8 @@ const server = http.createServer(async (req, res) => {
 function fetchJSON(urlPath) {
   return new Promise((resolve) => {
     if (!API_URL) return resolve({ _proxy_error: "API_BASE_URL belum diset" });
-    http.get(API_URL + urlPath, (apiRes) => {
+    const transport = API_URL.startsWith("https:") ? require("https") : http;
+    transport.get(API_URL + urlPath, { rejectUnauthorized: false }, (apiRes) => {
       let body = "";
       apiRes.on("data", (c) => (body += c));
       apiRes.on("end", () => {
